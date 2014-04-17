@@ -2,7 +2,7 @@ var init,
     TreeWalker,
     oninitdone,
     onwalkerfile,
-    onfile,
+    onstdindata,
     onerror,
     emitter;
 
@@ -19,18 +19,28 @@ oninitdone = function oninitdone(path) {
 };
 
 onwalkerfile = function onwalkerfile(file) {
-    var handler;
+    var stream,
+        ondata;
     
-    console.log('file.chmod()');
+    console.log('file.createWriteStream()');
     
-    handler = file.chmod(777);
-
-    handler.once('file', onfile);
-    handler.once('error', onerror);
+    stream = file.createWriteStream();
+    
+    console.log('file : ' + file);
+    
+    ondata = onstdindata.bind(stream);
+    
+    process.stdin.on('data', ondata);
+    
+    stream.once('error', onerror);
 };
 
-onfile = function onfile(file) {
-    console.log('file : ' + file);
+onstdindata = function onstdindata(data) {
+    if (data === '\u0003') {
+        this.end();
+    } else {
+        this.write(data);
+    }
 };
 
 onerror = console.log.bind(console, 'error');
